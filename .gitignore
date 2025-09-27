@@ -1,0 +1,20 @@
+# Node dependencies (very important to ignore)
+/frontend/node_modules
+/backend/node_modules
+
+# React build output
+/frontend/build
+
+# Python virtual environment and cache
+/navya_env
+__pycache__/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Temp files from our backend
+/backend/temp_image.png
+
+# NPM log files
+npm-debug.log*
