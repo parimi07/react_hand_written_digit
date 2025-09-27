@@ -18,25 +18,46 @@ function App() {
     contextRef.current = context;
   }, []);
 
-  const startDrawing = ({ nativeEvent }) => {
+  // --- MOUSE EVENT HANDLERS (for Desktop) ---
+  const startDrawingMouse = ({ nativeEvent }) => {
     const { offsetX, offsetY } = nativeEvent;
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
     setIsDrawing(true);
   };
 
-  const finishDrawing = () => {
-    contextRef.current.closePath();
-    setIsDrawing(false);
-  };
-
-  const draw = ({ nativeEvent }) => {
+  const drawMouse = ({ nativeEvent }) => {
     if (!isDrawing) return;
     const { offsetX, offsetY } = nativeEvent;
     contextRef.current.lineTo(offsetX, offsetY);
     contextRef.current.stroke();
+  };
+
+  // --- TOUCH EVENT HANDLERS (for Mobile) ---
+  const startDrawingTouch = (event) => {
+    const touch = event.touches[0];
+    const { clientX, clientY } = touch;
+    const rect = canvasRef.current.getBoundingClientRect();
     contextRef.current.beginPath();
-    contextRef.current.moveTo(offsetX, offsetY);
+    contextRef.current.moveTo(clientX - rect.left, clientY - rect.top);
+    setIsDrawing(true);
+  };
+
+  const drawTouch = (event) => {
+    if (!isDrawing) return;
+    const touch = event.touches[0];
+    const { clientX, clientY } = touch;
+    const rect = canvasRef.current.getBoundingClientRect();
+    contextRef.current.lineTo(clientX - rect.left, clientY - rect.top);
+    contextRef.current.stroke();
+    // Prevents the page from scrolling while drawing on the canvas
+    event.preventDefault(); 
+  };
+
+  // --- SHARED EVENT HANDLER ---
+  const finishDrawing = () => {
+    contextRef.current.closePath();
+    setIsDrawing(false);
   };
 
   const clearCanvas = () => {
@@ -53,9 +74,7 @@ function App() {
     const imageDataURL = canvas.toDataURL('image/png');
 
     try {
-      // This line uses the live backend URL when deployed on Render
       const apiUrl = `${process.env.REACT_APP_API_URL}/predict`;
-      
       const response = await axios.post(apiUrl, {
         image: imageDataURL,
       });
@@ -68,7 +87,6 @@ function App() {
     }
   };
 
-
   return (
     <div className="container">
       <h1>Handwritten Digit Recognizer</h1>
@@ -77,10 +95,15 @@ function App() {
         ref={canvasRef}
         width="280"
         height="280"
-        onMouseDown={startDrawing}
+        // Mouse events for desktop
+        onMouseDown={startDrawingMouse}
         onMouseUp={finishDrawing}
-        onMouseMove={draw}
+        onMouseMove={drawMouse}
         onMouseLeave={finishDrawing}
+        // Touch events for mobile
+        onTouchStart={startDrawingTouch}
+        onTouchEnd={finishDrawing}
+        onTouchMove={drawTouch}
       />
       <div className="buttons">
         <button onClick={predictDigit} disabled={isLoading}>
@@ -94,3 +117,4 @@ function App() {
 }
 
 export default App;
+
