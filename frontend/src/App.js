@@ -35,6 +35,8 @@ function App() {
     const { offsetX, offsetY } = nativeEvent;
     contextRef.current.lineTo(offsetX, offsetY);
     contextRef.current.stroke();
+    contextRef.current.beginPath();
+    contextRef.current.moveTo(offsetX, offsetY);
   };
 
   const clearCanvas = () => {
@@ -51,7 +53,10 @@ function App() {
     const imageDataURL = canvas.toDataURL('image/png');
 
     try {
-      const response = await axios.post('http://localhost:5000/predict', {
+      // This line uses the live backend URL when deployed on Render
+      const apiUrl = `${process.env.REACT_APP_API_URL}/predict`;
+      
+      const response = await axios.post(apiUrl, {
         image: imageDataURL,
       });
       setPrediction(response.data.digit);
